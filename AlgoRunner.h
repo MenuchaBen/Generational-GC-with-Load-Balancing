@@ -398,7 +398,6 @@ public:
         int logical_page_writes = ftl->logicalPageWrites - ftl->logicalPageWritesSteady;
         int physical_page_writes = ftl->physicalPageWrites - ftl->physicalPageWritesSteady;
         double wa = (double)physical_page_writes / logical_page_writes;
-        //double erasure_factor = erases/(NUMBER_OF_PAGES /(double)PAGES_PER_BLOCK);
         cout << "Simulation Results:" << endl;
         if (algo == GENERATIONAL) {
             cout << "Writes per generation:" << endl;
@@ -458,7 +457,7 @@ public:
             //dup2(fd_stdout, 1);
             cout << "shouldn't get here.." << endl;
         }
-        cout << "Enter number of generations for Generational GC (Enter 0 for heuristic selection):" << endl;
+        cout << "Enter number of generations for Generational GC (Enter 0 for auto selection):" << endl;
         cin >> user_parameters.number_of_generations; 
         if (output_file)
             freopen(output_file, "a", stdout);
@@ -482,14 +481,14 @@ public:
             exit(-1);
         }
         user_parameters.generational_type = GenAlgoType(temp_algo_type - 1);
-        cout << "generational algorithm type set to " << user_parameters.generational_type << endl;
+        cout << "generational algorithm type set to " << user_parameters.generational_type + 1 << endl;
         if (user_parameters.number_of_generations == 0) {
             if (user_parameters.generational_type == BASIC_GEN) {
                 user_parameters.number_of_generations = ftl->optimized_params.second;
                 cout << "Using Overloading factor heuristic to select number of generations..." << endl;
             }
             else {
-                double op = (PHYSICAL_BLOCK_NUMBER - LOGICAL_BLOCK_NUMBER) / LOGICAL_BLOCK_NUMBER;
+                double op = double(PHYSICAL_BLOCK_NUMBER - LOGICAL_BLOCK_NUMBER) / LOGICAL_BLOCK_NUMBER;
                 if (op < 0.1) {
                     user_parameters.number_of_generations = 6;
                 }
@@ -597,18 +596,11 @@ public:
 
     int getGeneration(unsigned long long page_index, int num_of_gens, bool page_in_writing_sequence = true, int lpn = NA) const {
         unsigned long long page_score = pageScore(page_index, page_in_writing_sequence, lpn) - page_index;
-        //if (KISS() % 2) {
             for (int i = 0; i < num_of_gens - 1; ++i) {
                 if (page_score < k_bounds[i])
                     return i;
             }
             return num_of_gens - 1;
-        /* }
-        for (int i = num_of_gens - 2; i >= 0; --i) {
-            if (page_score >= k_bounds[i])
-                return i;
-        }
-        return 0;*/
     }
 
 };

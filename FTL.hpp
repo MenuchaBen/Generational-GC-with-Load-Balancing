@@ -516,10 +516,6 @@ public:
 		char tempData[PAGES_PER_BLOCK * PAGE_SIZE];
 		int counter;
 		LogicalPage** logical_pages = new LogicalPage * [PAGES_PER_BLOCK];
-		if (!logical_pages) {
-			cout << "alloction error!" << endl;
-			exit(1);
-		}
 		block->copyValidToTempAndClean(tempData, logical_pages, &counter);
 		logicalPageWrites -= counter;
 		 to_rewrite += counter;
