@@ -2,7 +2,13 @@
 
 # Flash GC Simulator
 
-This simulator enables to run various garbage collection (GC) algorithms on an SSD memory layout. We implement a fully customizable infastructure that allows you to run your algorithm of choice on many different memory settings and record statistics such as number of erases and write amplification.
+This simulator enables to run the following garbage collection (GC) algorithms on an SSD memory layout:
+1. Generational GC
+2. Generational GCx (with static thresholds of your choice)
+3. Generational GCx with Load-Balancing
+
+We implemented the last 2 algorithms specified above based on the Simulator of Eyal Lotan and Dor Sura. The basic simulator has larger capabilities. Though we didn't remove all of them from the code, we might have broken them. So our recommandation will be to use our simulator only for the 3 algorithms listed above and only with the parametrs mentioned later in the file. If you wish to run other simulations, go to previouse version here: https://github.com/Eyallotan/GC_Simulatfully 
+For all simulations you'll be able to record statistics such as number of erases and write amplification.
 
 For full details about the theoretical model and the algorithms implemented in this simulator please read the [project report](https://github.com/Eyallotan/GC_Simulator/blob/main/Garbage%20Collection%20Algorithms%20for%20Flash%20Memories.pdf). In the report you will find all the needed prerequisites, along with a full breakdown of each algorithm, experiments results and more. 
 
@@ -10,11 +16,11 @@ For full details about the theoretical model and the algorithms implemented in t
 
 Follow these steps:
 
-```bash
+```cmd
 $ git clone https://github.com/Eyallotan/GC_Simulator.git
 $ cd GC_Simulator
-$ make
-$ ./Simulator <enter command line parameters>
+$ g++ *.cpp -o Simulator.exe
+$ .\Simulator.exe <enter command line parameters>
 ```
 
 ## Usage
@@ -27,74 +33,123 @@ These are the parameters you must set for each simulation:
 3. Pages per block (Z)
 4. Page size (in bytes)
 5. Number of pages (N) 
-6. Window flag
-7. Data distribution
-8. GC algorithm
-9. Optional parameter: Filename to redirect output to 
+6. Window flag - should be "window_off"
+7. Data distribution - should be "uniform"
+8. GC algorithm - should be "generational"
+9. BETA  
 
-* For window flag choose between ```window_on``` or ```window_off```. If you choose to turn on the window flag, you will be asked to choose the window size. 
-* For data distribution parameter choose between ```uniform``` or ```hot_cold```. If you choose hot/cold distribution, you will be asked to choose the hot page percentage and the probability for a hot page.
-* For GC algorithm choose between the following:
-1. ```greedy```
-2. ```greedy_lookahead```
-3. ```generational```. If you choose this option you will be prompt to choose the number of generations. You should make sure that the number of generations is at least 1 and smaller than T-U (this will also be enforced by the simulator). In the [project report](https://github.com/Eyallotan/GC_Simulator/blob/main/Garbage%20Collection%20Algorithms%20for%20Flash%20Memories.pdf) you can find an deep dive analysis regarding the selection of the optimal number of generations a given simulation. We also implemented a heuristic function called OF (overloading factor). This heuristic function can be used to help you choose the best number of generations for your simulation based on the given parameters (T,U,Z). In order to use the OF heuristic, enter 0 when you are prompted to choose the number of generations for you simulation, and the OF function will be applied and choose the number of generations for you.
-4. ```writing_assingment``` - This algorithm was only partially implemented since it did not improve the writing performance and we decided to proceed in different directions for the time being. Therefore it doesn't support all features such as window feature etc. You can check out the source code for full documentation and TODOS in this subject.
+```
+BETA parameter: 
+this parameter is used differently by each algorithm. 
+  1. Generational GC - does not use BETA, though you'll need to provide it either way.
+  2. Generational GCx with static threshold - BETA is the threshold.
+  3. Generational GCx with Load-Balancing - BETA is the interval size.
+```  
+You will be prompt to choose the number of generations and the algorithm type. For the algoritm type, you'll be presented with a menu to choose from. Enter the algorithm index in the menu you wish to run for your simulation. 
+If you wish that the number of generations would be chosen for you based on the given parameters (T,U,Z) and according to the best results of the experiments done by us and by Eyal and Dor, enetr 0 when you are prompted to choose the number of generations for you simulation. 
+
+For the algorithm Generational GC, you'll be able to see the logical load during the simulation on each generation.
+For the other 2 algorithm, you'll see also the physical load.
 
 ### Examples
 
 ```bash
-$ ./Simulator 64 50 32 4096 100000 window_off uniform greedy
+$ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 0
 Starting GC Simulator!
-Physical Blocks:        64
-Logical Blocks:         50
-Pages/Block:            32
+Physical Blocks:        96
+Logical Blocks:         81
+Pages/Block:            256
 Page Size:              4096
-Alpha:                  0.78125
-Over Provisioning:      0.28
-Number of Pages:        100000
-Page Distribution:      uniform
-GC Algorithm:           greedy
-
-Starting Greedy Algorithm simulation...
-Reaching Steady State...
-Steady State Reached...
-
-Simulation Results:
-Number of erases: 7394. Write Amplification: 2.36604
-
-$ ./Simulator 64 50 32 4096 100000 window_off uniform greedy_lookahead
-Starting GC Simulator!
-Physical Blocks:        64
-Logical Blocks:         50
-Pages/Block:            32
-Page Size:              4096
-Alpha:                  0.78125
-Over Provisioning:      0.28
-Number of Pages:        100000
-Page Distribution:      uniform
-GC Algorithm:           greedy_lookahead
-
-Starting Greedy LookAhead Algorithm simulation...
-Reaching Steady State...
-Steady State Reached...
-
-Simulation Results:
-Number of erases: 7170. Write Amplification: 2.29439
-
-$ ./Simulator 64 52 32 4096 100000 window_off uniform generational
-Starting GC Simulator!
-Physical Blocks:        64
-Logical Blocks:         52
-Pages/Block:            32
-Page Size:              4096
-Alpha:                  0.8125
-Over Provisioning:      0.230769
+Alpha:                  0.84375
+Beta:                   0
+Over Provisioning:      0.185185
 Number of Pages:        100000
 Page Distribution:      uniform
 GC Algorithm:           generational
 
-Enter number of generations for Generational GC (Enter 0 for heuristic selection):
+Enter number of generations for Generational GC (Enter 0 for auto selection):
+3
+Enter the number of generational algorithm you wish to run:
+1 - Generational GC, BETA is not used
+2 - Generational GCx with static bound, BETA is the static bound
+3 - Generational GCx with Load-Balancing - BETA is interval size
+1
+generational algorithm type set to 1
+Number of generations set to 3 generations.
+
+Starting Generational Algorithm simulation...
+Reaching Steady State...
+Steady State Reached...
+
+Simulation Results:
+Writes per generation:
+Generation 0 logical writes:    33.375%
+Generation 1 logical writes:    22.509%
+Generation 2 logical writes:    44.116%
+Number of erases: 1291. Write Amplification: 3.30459
+```
+
+```bash
+$ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 0
+Starting GC Simulator!
+Physical Blocks:        96
+Logical Blocks:         81
+Pages/Block:            256
+Page Size:              4096
+Alpha:                  0.84375
+Beta:                   0
+Over Provisioning:      0.185185
+Number of Pages:        100000
+Page Distribution:      uniform
+GC Algorithm:           generational
+
+Enter number of generations for Generational GC (Enter 0 for auto selection):
+0
+Enter the number of generational algorithm you wish to run:
+1 - Generational GC, BETA is not used
+2 - Generational GCx with static bound, BETA is the static bound
+3 - Generational GCx with Load-Balancing - BETA is interval size
+1
+generational algorithm type set to 1
+Using Overloading factor heuristic to select number of generations...
+Number of generations set to 5 generations.
+
+Starting Generational Algorithm simulation...
+Reaching Steady State...
+Steady State Reached...
+
+Simulation Results:
+Writes per generation:
+Generation 0 logical writes:    21.578%
+Generation 1 logical writes:    17.123%
+Generation 2 logical writes:    13.361%
+Generation 3 logical writes:    10.472%
+Generation 4 logical writes:    37.466%
+Number of erases: 1316. Write Amplification: 3.36603
+```
+
+```bash
+$ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 4147
+Starting GC Simulator!
+Physical Blocks:        96
+Logical Blocks:         81
+Pages/Block:            256
+Page Size:              4096
+Alpha:                  0.84375
+Beta:                   4147
+Over Provisioning:      0.185185
+Number of Pages:        100000
+Page Distribution:      uniform
+GC Algorithm:           generational
+
+Enter number of generations for Generational GC (Enter 0 for auto selection):
 2
+Enter the number of generational algorithm you wish to run:
+1 - Generational GC, BETA is not used
+2 - Generational GCx with static bound, BETA is the static bound
+3 - Generational GCx with Load-Balancing - BETA is interval size
+2
+generational algorithm type set to 2
 Number of generations set to 2 generations.
 
 Starting Generational Algorithm simulation...
@@ -102,251 +157,117 @@ Reaching Steady State...
 Steady State Reached...
 
 Simulation Results:
-Number of erases: 8002. Write Amplification: 2.56052
-
-$ ./Simulator 64 52 32 4096 100000 window_off uniform generational
+Writes per generation:
+Generation 0 logical writes:    21.368%
+Generation 0 physical writes:   36.8374%
+Generation 1 logical writes:    78.632%
+Generation 1 physical writes:   63.1626%
+Number of erases: 993. Write Amplification: 2.54174
+```
+```bash
+$ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 4147
 Starting GC Simulator!
-Physical Blocks:        64
-Logical Blocks:         52
-Pages/Block:            32
+Physical Blocks:        96
+Logical Blocks:         81
+Pages/Block:            256
 Page Size:              4096
-Alpha:                  0.8125
-Over Provisioning:      0.230769
+Alpha:                  0.84375
+Beta:                   4147
+Over Provisioning:      0.185185
 Number of Pages:        100000
 Page Distribution:      uniform
 GC Algorithm:           generational
 
-Enter number of generations for Generational GC (Enter 0 for heuristic selection):
+Enter number of generations for Generational GC (Enter 0 for auto selection):
 0
-Using Overloading facror heuristic to select number of generations...
-Number of generations set to 3 generations.
+Enter the number of generational algorithm you wish to run:
+1 - Generational GC, BETA is not used
+2 - Generational GCx with static bound, BETA is the static bound
+3 - Generational GCx with Load-Balancing - BETA is interval size
+2
+generational algorithm type set to 2
+Number of generations set to 8 generations.
 
 Starting Generational Algorithm simulation...
 Reaching Steady State...
 Steady State Reached...
 
 Simulation Results:
-Number of erases: 7926. Write Amplification: 2.53632
-
-$ ./Simulator 64 52 32 4096 100000 window_on hot_cold generational
+Writes per generation:
+Generation 0 logical writes:    21.339%
+Generation 0 physical writes:   40.9485%
+Generation 1 logical writes:    16.939%
+Generation 1 physical writes:   12.6191%
+Generation 2 logical writes:    13.335%
+Generation 2 physical writes:   9.88226%
+Generation 3 logical writes:    10.714%
+Generation 3 physical writes:   7.99029%
+Generation 4 logical writes:    8.441%
+Generation 4 physical writes:   6.21141%
+Generation 5 logical writes:    6.638%
+Generation 5 physical writes:   4.96375%
+Generation 6 logical writes:    5.112%
+Generation 6 physical writes:   3.80656%
+Generation 7 logical writes:    17.482%
+Generation 7 physical writes:   13.5782%
+Number of erases: 643. Write Amplification: 1.63586
+```
+```bash
+$ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 4147
 Starting GC Simulator!
-Physical Blocks:        64
-Logical Blocks:         52
-Pages/Block:            32
+Physical Blocks:        96
+Logical Blocks:         81
+Pages/Block:            256
 Page Size:              4096
-Alpha:                  0.8125
-Over Provisioning:      0.230769
+Alpha:                  0.84375
+Beta:                   4147
+Over Provisioning:      0.185185
 Number of Pages:        100000
-Page Distribution:      hot_cold
+Page Distribution:      uniform
 GC Algorithm:           generational
 
-Please enter parameters for Hot/Cold memory simulation.
-Enter the hot page percentage out of all logical pages in memory (0-100):
-5
-Enter the probability for hot pages (0-1):
-0.9
-Enter Window Size:
-50000
-Window size set successfully to n=50000.
-
-Enter number of generations for Generational GC (Enter 0 for heuristic selection):
+Enter number of generations for Generational GC (Enter 0 for auto selection):
 0
-Using Overloading facror heuristic to select number of generations...
-Number of generations set to 3 generations.
+Enter the number of generational algorithm you wish to run:
+1 - Generational GC, BETA is not used
+2 - Generational GCx with static bound, BETA is the static bound
+3 - Generational GCx with Load-Balancing - BETA is interval size
+3
+generational algorithm type set to 3
+Number of generations set to 8 generations.
 
+Enter gen population:
+0.1 0.1 0.1 0.1 0.15 0.15 0.15 0.15
 Starting Generational Algorithm simulation...
 Reaching Steady State...
 Steady State Reached...
 
 Simulation Results:
-Number of erases: 10489. Write Amplification: 3.35652
-```
-
-### Window flag
-We added a window flag option that let's you run simulations using a fixed window of future writes, while all other writes are generated on the spot (with no future knowledge). For example: 
-```bash
-$ ./Simulator 64 55 32 4096 10000 window_on uniform greedy_lookahead
-Starting GC Simulator!
-Physical Blocks:        64
-Logical Blocks:         55
-Pages/Block:            32
-Page Size:              4096
-Alpha:                  0.859375
-Over Provisioning:      0.163636
-Number of Pages:        10000
-Page Distribution:      uniform
-GC Algorithm:           greedy_lookahead
-
-Enter Window Size:
-2000
-Window size set successfully to n=2000.
-
-Starting Greedy LookAhead Algorithm simulation...
-Reaching Steady State...
-Steady State Reached...
-
-Simulation Results:
-Number of erases: 1063. Write Amplification: 3.4016
-```
-In the example avoce, the simulation will first generate a unifromly distributed writing sequence with length of 2000 (a.k.a window size) and use Greedy Lookahead algorithm to write all the pages in the window. Note that the future knowledge is now bounded by the window size, i.e., when we reach write number 1995, we only have 5 future writes as reference, even though we still have 8000+ writes remaining for the whole simulation. After completing the writes within the window size, the simulation will write all remaining pages using the classic Greedy GC algorithm. 
-
-This feature can be usefull for simulating the affect of write ahead buffers in RAM (non-volotile memory) that provide us with a short future of writes. This gives us the oppurtunity to benefit from using our algorithms. As n (the window size) approaches N (Total number of pages), we get a writing performance that approaches the performance of the improved algorithm (Greedy Lookahead / Generational). As n approaces 0 we get a performance that approaches the perforamnce of the classic Greedy GC. For more results and deep dive analysis see the [project report](https://github.com/Eyallotan/GC_Simulator/blob/main/Garbage%20Collection%20Algorithms%20for%20Flash%20Memories.pdf).
-
-### Print Mode
-We have implemented a print mode option that reflects block and page statistics as the simulator runs, along with information about the number of logical writes and more useful information. The print mode option is turned off by default and should not be used unless you redirect your output to a file (otherwise print time will probably make the simulation run for a very long time). if you wish to turn on the print mode you can comment out the following line in [```main.cpp```](main.cpp):
-```cpp
-110.  /* if you wish to activate print mode remove comment */
-111.    //scg->setPrintMode(true);
-``` 
-Now when we run the simulator we'll get the relevant statistics.  
-For exmaple (here we print to terminal just for the example. You should redirect to output file):
-```bash
-$ ./Simulator 12 7 4 4096 100000 window_off uniform greedy
-Starting GC Simulator!
-Physical Blocks:        12
-Logical Blocks:         7
-Pages/Block:            4
-Page Size:              4096
-Alpha:                  0.583333
-Over Provisioning:      0.714286
-Number of Pages:        100000
-Page Distribution:      uniform
-GC Algorithm:           greedy
-
-Starting Greedy Algorithm simulation...
-Reaching Steady State...
-Steady State Reached...
-
-Erases          Logical Writes  Y      V[0]    V[1]    V[2]    V[3]    V[4]
-1               48              0       2       4       2       2       2
-2               52              0       2       4       1       4       1
-3               56              0       2       3       3       2       2
-4               60              0       1       6       0       3       2
-5               64              0       1       5       1       3       2
-6               68              0       1       5       0       4       2
-7               72              1       0       5       1       4       2
-8               75              1       0       4       2       5       1
-9               78              0       1       3       2       4       2
-10              82              1       0       4       3       3       2
-11              85              0       2       1       3       4       2
-12              89              0       1       2       3       5       1
-13              93              0       1       1       4       6       0
-14              97              1       0       5       0       6       1
-15              100             1       0       4       3       3       2
-16              103             0       1       2       3       5       1
-17              107             0       2       1       3       4       2
-18              111             0       1       1       3       7       0
-19              115             1       0       2       4       6       0
-20              118             1       0       2       5       4       1
-21              121             1       0       3       3       5       1
-22              124             1       0       4       2       4       2
-23              127             1       0       4       1       6       1
-24              130             1       0       4       2       4       2
-25              133             1       0       4       2       4       2
-26              136             1       0       5       0       5       2
-27              139             0       1       3       2       3       3
-28              143             0       1       3       2       3       3
-29              147             1       0       3       4       3       2^C
-
-```
-
-### Steady State 
-We use steady state assumption (as expalined in the [project report](https://github.com/Eyallotan/GC_Simulator/blob/main/Garbage%20Collection%20Algorithms%20for%20Flash%20Memories.pdf)). Therefore the steady state flag is automatically turned on. if you wish to turn it off you can comment out the following line in [```main.cpp```](main.cpp):
-```cpp
-113.  /* if you wish to deactivate steady state mode remove comment */
-114.    //scg->setSteadyState(false);
-``` 
-You can also adjust the number of writes done in order to achieve steady state (this can be better integrated in the future to be part of the adjustable parameters..). 
-
-### Debug Mode
-For your convenience, we implemented a simple memory layout printer. This can be used to print the memory layout as the simulator runs. 
-Important: This feature is designed to work on small memory layouts. Make sure that U*Z < 100 in order to get a good looking result.
-We may consider making this feature a bit more robust in the future, but we think that for debugging purposes this works fine for now.
-To use this feature simply plant the function ```printMemoryLayout()``` implemented in [```FTL.hpp```](FTL.hpp).
-This may look something like this:
-```cpp
-  void runGreedySimulation(Algorithm algo) {
-        if (reach_steady_state){
-            reachSteadyState();
-        }
-        for (unsigned long long i = 0; i < NUMBER_OF_PAGES; i++) {
-        /* DEBUG mode - print memory layout */
-            ftl->printMemoryLayout();
-            ftl->write(data,writing_sequence[i],algo, writing_sequence, i);
-        }
-    }
-```
-Now when we run the simulation we will see the full memory layout, with logical block numbers for valid pages and X's for invalid pages:
-```bash
-$ ./Simulator 12 7 4 4096 100000 window_off uniform greedy
-Starting GC Simulator!
-Physical Blocks:        12
-Logical Blocks:         7
-Pages/Block:            4
-Page Size:              4096
-Alpha:                  0.583333
-Over Provisioning:      0.714286
-Number of Pages:        100000
-Page Distribution:      uniform
-GC Algorithm:           greedy
-
-Starting Greedy Algorithm simulation...
-Reaching Steady State...
-Steady State Reached...
-
-       0    1    2    3    4    5    6    7    8    9    10    11
-     ------------------------------------------------------------
-0   | X  |  2 | 26 | 11 | 24 | 18 |  0 | X  | 10 | X  | 12 | 20 |
-     ------------------------------------------------------------
-1   |  6 |  8 | 23 |  4 | X  | X  | X  | 19 | X  |  5 | X  |  1 |
-     ------------------------------------------------------------
-2   | 25 |  3 |  9 |    | 17 | X  | X  | 22 | X  | X  | 16 | 15 |
-     ------------------------------------------------------------
-3   | X  | 21 |  7 |    | X  | X  | X  | 27 | X  | 13 | X  | 14 |
-     ------------------------------------------------------------
-     
-       0    1    2    3    4    5    6    7    8    9    10    11
-     ------------------------------------------------------------
-0   | X  |  2 | 26 | X  | 24 | 18 |  0 | X  | 10 | X  | 12 | 20 |
-     ------------------------------------------------------------
-1   |  6 |  8 | 23 |  4 | X  | X  | X  | 19 | X  |  5 | X  |  1 |
-     ------------------------------------------------------------
-2   | 25 |  3 |  9 | 11 | 17 | X  | X  | 22 | X  | X  | 16 | 15 |
-     ------------------------------------------------------------
-3   | X  | 21 |  7 |    | X  | X  | X  | 27 | X  | 13 | X  | 14 |
-     ------------------------------------------------------------
-     
-       0    1    2    3    4    5    6    7    8    9    10    11
-     ------------------------------------------------------------
-0   | X  |  2 | 26 | X  | 24 | 18 |  0 | X  | X  | X  | 12 | 20 |
-     ------------------------------------------------------------
-1   |  6 |  8 | 23 |  4 | X  | X  | X  | 19 | X  |  5 | X  |  1 |
-     ------------------------------------------------------------
-2   | 25 |  3 |  9 | 11 | 17 | X  | X  | 22 | X  | X  | 16 | 15 |
-     ------------------------------------------------------------
-3   | X  | 21 |  7 | 10 | X  | X  | X  | 27 | X  | 13 | X  | 14 |
-     ------------------------------------------------------------
-       0    1    2    3    4    5    6    7    8    9    10    11
-       
-     ------------------------------------------------------------
-0   | X  |  2 | 26 | X  | 24 | 18 |  0 | X  | 22 | X  | 12 | 20 |
-     ------------------------------------------------------------
-1   |  6 |  8 | 23 |  4 | X  | X  | X  | 19 |    |  5 | X  |  1 |
-     ------------------------------------------------------------
-2   | 25 |  3 |  9 | 11 | 17 | X  | X  | X  |    | X  | 16 | 15 |
-     ------------------------------------------------------------
-3   | X  | 21 |  7 | 10 | X  | X  | X  | 27 |    | 13 | X  | 14 |
-     ------------------------------------------------------------^C
+Writes per generation:
+Generation 0 logical writes:    9.959%
+Generation 0 physical writes:   26.9267%
+Generation 1 logical writes:    9.921%
+Generation 1 physical writes:   9.45%
+Generation 2 logical writes:    9.914%
+Generation 2 physical writes:   8.26267%
+Generation 3 logical writes:    9.555%
+Generation 3 physical writes:   7.662%
+Generation 4 logical writes:    14.611%
+Generation 4 physical writes:   11.6493%
+Generation 5 logical writes:    15.6%
+Generation 5 physical writes:   12.384%
+Generation 6 logical writes:    14.573%
+Generation 6 physical writes:   11.5827%
+Generation 7 logical writes:    15.395%
+Generation 7 physical writes:   12.0827%
+Number of erases: 589. Write Amplification: 1.50711
 ```
 
 ## Contributing
 
 Pull requests are welcomed. 
-There are many TODO's we hope to get to in the near (or far) future. 
-Some of our ideas and afterthoughts are written in the [project report](https://github.com/Eyallotan/GC_Simulator/blob/main/Garbage%20Collection%20Algorithms%20for%20Flash%20Memories.pdf).
 
 ## License
-
-All rights are reserved to Eyal Lotan and Dor Sura.
-The Simulator FTL interface is based on the work of Alex Yucovich.
+All rights are reserved to Menucha Benisti and Rotem Elias.
+The Simulator FTL interface is based on the work of Eyal Lotan, Dor Sura and Alex Yucovich.
 
