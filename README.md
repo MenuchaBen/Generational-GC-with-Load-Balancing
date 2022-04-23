@@ -18,7 +18,7 @@ Follow these steps:
 
 ```cmd
 $ git clone https://github.com/MenuchaBen/Generational-GC-with-Load-Balancing.git
-$ cd GC_Simulator
+$ cd Generational-GC-with-Load-Balancing
 $ g++ *.cpp -o Simulator.exe
 $ .\Simulator.exe <enter command line parameters>
 ```
