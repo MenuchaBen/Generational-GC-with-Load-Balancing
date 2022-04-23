@@ -10,7 +10,7 @@ This simulator enables to run the following garbage collection (GC) algorithms o
 We implemented the last 2 algorithms specified above based on the Simulator of Eyal Lotan and Dor Sura. The basic simulator has larger capabilities. Though we didn't remove all of them from the code, we might have broken them. So our recommandation will be to use our simulator only for the 3 algorithms listed above and only with the parametrs mentioned later in the file. If you wish to run other simulations, go to previouse version here: https://github.com/Eyallotan/GC_Simulatfully 
 For all simulations you'll be able to record statistics such as number of erases and write amplification.
 
-For full details about the theoretical model and the algorithms implemented in this simulator please read the [project report](https://github.com/Eyallotan/GC_Simulator/blob/main/Garbage%20Collection%20Algorithms%20for%20Flash%20Memories.pdf). In the report you will find all the needed prerequisites, along with a full breakdown of each algorithm, experiments results and more. 
+For full details about the theoretical model and the algorithms implemented in this simulator please read the [project report](https://github.com/MenuchaBen/Generational-GC-with-Load-Balancing/blob/main/Generational-GCx-with-Load-Balancingt.pdf). In the report you will find all the needed prerequisites, along with a full breakdown of each algorithm, experiments results and more. 
 
 ## Installation
 
@@ -53,8 +53,11 @@ For the other 2 algorithm, you'll see also the physical load.
 
 ### Examples
 
-```bash
+```cmd
 $ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 0
+```
+
+```cmd
 Starting GC Simulator!
 Physical Blocks:        96
 Logical Blocks:         81
@@ -89,8 +92,10 @@ Generation 2 logical writes:    44.116%
 Number of erases: 1291. Write Amplification: 3.30459
 ```
 
-```bash
+```cmd
 $ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 0
+```
+```
 Starting GC Simulator!
 Physical Blocks:        96
 Logical Blocks:         81
@@ -128,8 +133,10 @@ Generation 4 logical writes:    37.466%
 Number of erases: 1316. Write Amplification: 3.36603
 ```
 
-```bash
+```cmd
 $ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 4147
+```
+```
 Starting GC Simulator!
 Physical Blocks:        96
 Logical Blocks:         81
@@ -164,8 +171,10 @@ Generation 1 logical writes:    78.632%
 Generation 1 physical writes:   63.1626%
 Number of erases: 993. Write Amplification: 2.54174
 ```
-```bash
+```cmd
 $ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 4147
+```
+```
 Starting GC Simulator!
 Physical Blocks:        96
 Logical Blocks:         81
@@ -212,8 +221,10 @@ Generation 7 logical writes:    17.482%
 Generation 7 physical writes:   13.5782%
 Number of erases: 643. Write Amplification: 1.63586
 ```
-```bash
+```cmd
 $ .\Simulator.exe 96 81 256 4096 100000 window_off uniform generational 4147
+```
+```
 Starting GC Simulator!
 Physical Blocks:        96
 Logical Blocks:         81
