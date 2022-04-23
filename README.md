@@ -17,7 +17,7 @@ For full details about the theoretical model and the algorithms implemented in t
 Follow these steps:
 
 ```cmd
-$ git clone https://github.com/Eyallotan/GC_Simulator.git
+$ git clone https://github.com/MenuchaBen/Generational-GC-with-Load-Balancing.git
 $ cd GC_Simulator
 $ g++ *.cpp -o Simulator.exe
 $ .\Simulator.exe <enter command line parameters>
