@@ -22,7 +22,7 @@ using std::map;
 using std::vector;
 
 typedef enum {
-    BASIC_GEN, GENx_STATIC_BOUND, GENx_LOAD_BALANCE_OPT, GENx_LOAD_BALANCE_MANUALY
+    BASIC_GEN, GENx_STATIC_BOUND, GENx_LOAD_BALANCE
 } GenAlgoType;
 
 class UserParameters {
@@ -125,61 +125,30 @@ public:
         getUserParams();
 
         if (algo == GENERATIONAL) {
-            if (user_parameters.generational_type == GENx_LOAD_BALANCE_MANUALY) {
+            if (user_parameters.generational_type == GENx_LOAD_BALANCE) {
                 interval = BETA;
             }
-            else if (user_parameters.generational_type == GENx_LOAD_BALANCE_OPT) {
-                interval = 0.2 * LOGICAL_BLOCK_NUMBER * PAGES_PER_BLOCK;
-            }
             //else: interval remains N - initialized in constructor of AlgoRunner
-            if (user_parameters.generational_type == GENx_LOAD_BALANCE_MANUALY || 
-                user_parameters.generational_type == GENx_LOAD_BALANCE_OPT) {
+            if (user_parameters.generational_type == GENx_LOAD_BALANCE ) {
                 gens_population = new int[user_parameters.number_of_generations];
-                if (user_parameters.generational_type == GENx_LOAD_BALANCE_OPT) {
-                    if (user_parameters.number_of_generations == 2) {
-                        double op = (PHYSICAL_BLOCK_NUMBER - LOGICAL_BLOCK_NUMBER) / LOGICAL_BLOCK_NUMBER;
-                        if (op < 0.1) {
-                            gens_population[0] = round(0.45 * interval);
-                        }
-                        else if (op < 0.15) {
-                            gens_population[0] = round(0.5 * interval);
-                        }
-                        else if (op < 0.35) {
-                            gens_population[0] = round(0.55 * interval);
-                        }
-                        else if (op < 0.7) {
-                            gens_population[0] = round(0.6 * interval);
-                        }
-                        else {
-                            gens_population[0] = round(0.65 * interval);
-                        }
-                        gens_population[1] = interval - gens_population[0];
+                cout << "Enter gen population:" << endl;
+                double count_to_one = 0;
+                unsigned long long cout_to_interval = 0;
+                for (int i = 0; i < user_parameters.number_of_generations; i++) {
+                    double precentage_pop;
+                    cin >> precentage_pop;
+                    count_to_one += precentage_pop;
+                    if (i < user_parameters.number_of_generations - 1) {
+                        gens_population[i] = round(precentage_pop * interval);
+                        cout_to_interval += gens_population[i];
+                    }
+                    else if (count_to_one == 1) {
+                        gens_population[user_parameters.number_of_generations - 1] = interval - cout_to_interval;
                     }
                     else {
-                        //TODO: complete for more than 2 generations
-                    }
-                }
-                else if (user_parameters.generational_type == GENx_LOAD_BALANCE_MANUALY) {
-                    cout << "Enter gen population:" << endl;
-                    double count_to_one = 0;
-                    unsigned long long cout_to_interval = 0;
-                    for (int i = 0; i < user_parameters.number_of_generations; i++) {
-                        double precentage_pop;
-                        cin >> precentage_pop;
-                        count_to_one += precentage_pop;
-                        if (i < user_parameters.number_of_generations - 1) {
-                            gens_population[i] = round(precentage_pop * interval);
-                            cout_to_interval += gens_population[i];
-                        }
-                        else if (count_to_one == 1) {
-                            gens_population[user_parameters.number_of_generations - 1] = interval - cout_to_interval;
-                        }
-                        else {
-                            cerr << "Load balancing incorrent" << endl;
-                            exit(-1);
-                        }
-                    }
-                    
+                        cerr << "Load balancing incorrent" << endl;
+                        exit(-1);
+                    }   
                 }
             }
             initializeKBounds();
@@ -403,29 +372,15 @@ public:
             cout << "Writes per generation:" << endl;
             for (int i = 0; i < user_parameters.number_of_generations; i++) {
                 cout << "Generation " << i << " logical writes:\t" <<
-                    ((double)logical_writes_per_gen[i] / NUMBER_OF_PAGES) * 100 << endl;
-                cout << "Generation " << i << " physical writes:\t" <<
-                    ((double)physical_writes_per_gen[i] / physical_page_writes) * 100 << endl;
+                    ((double)logical_writes_per_gen[i] / NUMBER_OF_PAGES) * 100 << "%" << endl;
+                if (user_parameters.generational_type != BASIC_GEN) {
+                    cout << "Generation " << i << " physical writes:\t" <<
+                        ((double)physical_writes_per_gen[i] / physical_page_writes) * 100 << "%" << endl;
+                }
             }
         }
         cout << "Number of erases: " << erases << ". Write Amplification: " << wa << endl;
     }
-
-    /*void runWritingAssignmentSimulation() {
-        if (reach_steady_state) {
-            reachSteadyState();
-        }
-        unsigned long long base_index = 0;
-        unsigned int window_size = getWindowSize();
-        while (base_index < NUMBER_OF_PAGES) {
-            vector<pair<unsigned int, int>> writing_assignment = getWritingAssignment(base_index, window_size);
-            for (unsigned long long i = 0; i < writing_assignment.size() && i < NUMBER_OF_PAGES; i++) {
-                ftl->writeToBlock(data, writing_assignment[i].first, writing_assignment[i].second);
-            }
-            base_index += window_size;
-            window_size = getWindowSize();
-        }
-    }*/
 
     unsigned int getWindowSize() const {
         if (page_dist == UNIFORM) {
@@ -472,11 +427,10 @@ public:
         cout << "Enter the number of generational algorithm you wish to run:" << endl;
         cout << "1 - Generational GC, BETA is not used" << endl;
         cout << "2 - Generational GCx with static bound, BETA is the static bound" << endl;
-        cout << "3 - Generational GCx with Load-Balancing - optimal values assigned, BETA is not used" << endl;
-        cout << "4 - Generational GCx with Load-Balancing - manualy values assigned, BETA is interval size" << endl;
+        cout << "3 - Generational GCx with Load-Balancing - BETA is interval size" << endl;
         int temp_algo_type;
         cin >> temp_algo_type;
-        if (temp_algo_type < 1 || temp_algo_type > 4 ) {
+        if (temp_algo_type < 1 || temp_algo_type > 3 ) {
             cerr << "Error! not a generational algorithem type" << endl;
             exit(-1);
         }
@@ -531,7 +485,6 @@ public:
         if (user_parameters.generational_type == BASIC_GEN) {
             for (unsigned long long i = 0; i < window_size; ++i) {
                 int generation = getGeneration(i, num_of_gens);
-                physical_writes_per_gen[generation]++;
                 logical_writes_per_gen[generation]++;
                 ftl->writeGenerational(data, writing_sequence[i], generation, writing_sequence, i);
             }
